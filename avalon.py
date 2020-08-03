@@ -69,6 +69,13 @@ class game:
 		self.messageSetting = []
 		self.players = []
 		self.owner = ""
+		self.history = ""
+		self.mission = []
+		self.needToFail = []
+		self.spies = 0
+		self.points = 0
+		self.curr = 0
+		self.consecutive = 3
 
 	def setting(self,msg_id):
 		self.messageSetting = config(self.id,msg_id)
@@ -229,6 +236,82 @@ class game:
 		for P in self.players:
 			print(P.name,': ',P.roles)
 
+	def setVariables(self):
+		self.spies = int(self.totalPlayers - 1)//2
+		self.history = "\U000023EA    Histórico    \U000023EA\n\n"
+		self.history = self.history + "Rodada 1:\n\n"
+		if self.totalPlayers == 5:
+			self.mission.append(2)
+			self.mission.append(3)
+			self.mission.append(2)
+			self.mission.append(3)
+			self.mission.append(3)
+			self.needToFail.append(1)
+			self.needToFail.append(1)
+			self.needToFail.append(1)
+			self.needToFail.append(1)
+			self.needToFail.append(1)
+		elif self.totalPlayers == 6:
+			self.mission.append(2)
+			self.mission.append(3)
+			self.mission.append(4)
+			self.mission.append(3)
+			self.mission.append(4)
+			self.needToFail.append(1)
+			self.needToFail.append(1)
+			self.needToFail.append(1)
+			self.needToFail.append(1)
+			self.needToFail.append(1)
+		elif self.totalPlayers == 7:
+			self.mission.append(2)
+			self.mission.append(3)
+			self.mission.append(3)
+			self.mission.append(4)
+			self.mission.append(4)
+			self.needToFail.append(1)
+			self.needToFail.append(1)
+			self.needToFail.append(1)
+			self.needToFail.append(2)
+			self.needToFail.append(1)
+		else:
+			self.mission.append(3)
+			self.mission.append(4)
+			self.mission.append(4)
+			self.mission.append(5)
+			self.mission.append(5)
+			self.needToFail.append(1)
+			self.needToFail.append(1)
+			self.needToFail.append(1)
+			self.needToFail.append(2)
+			self.needToFail.append(1)
+	def remember(self,to):
+		text = "\U0001F4AD    Relembrando    \U0001F4AD\n\n"
+		text = text + "existem " + str(self.spies) + " espiões e " + str(self.totalPlayers - self.spies)
+		text = text + " resistentes\n" + "Papéis adicionais: "
+		for P in self.roles:
+			text = text + P + " "
+		text = text + "\n\nDigite /remember para rever esta mensagem\n\nDigite /leader para visualizar a ordem dos"
+		text = text + " próximos líderes das missões\n\n Digite /history para visualizar o histórico de votações"
+		bot.sendMessage(to,text)
+	def getHistory(self,to):
+		bot.sendMessage(to,self.history)
+	def leader(self,to):
+		finish = self.curr + self.consecutive
+		if finish >= self.totalPlayers:
+			finish = finish - self.totalPlayers
+		text = "\U0001F6A6    Próximos líderes    \U0001F6A6\n\n"
+		pi = 0
+		for L in self.players:
+			text = text + "- " + L.name
+			if pi == finish:
+				text = text + " " + "\U000026A0"
+			if pi == self.curr:
+				text = text + " " + "\U0001F448"
+			text = text + "\n"
+			pi = pi + 1
+		bot.sendMessage(to,text)
+
+
 	def initGame(self):
 		self.state = 1
 		self.shuffle()
@@ -241,6 +324,10 @@ class game:
 		self.printAllInfo()
 		bot.sendMessage(self.id,"\U0001F534\U0001F535 Por favor, chequem seus papéis que foram"+
 			" enviados no privado \U0001F534\U0001F535")
+		self.setVariables()
+		self.shuffle()
+		self.remember(self.id)
+
 
 ############################# General Class ############################################
 class general:
@@ -354,7 +441,7 @@ def groupMode(msg):
 			avalon.games[x].owner = msg['message']['from']['username']
 		return None
 	if isRunning(msg['message']['chat']['id']) == -1:
-		bot.sendMessage(msg['message']['chat']['id'],"Nenhum jogo iniciado. Digite /newgame para iniciar um novo jogo")
+		bot.sendMessage(msg['message']['chat']['id'],"Nenhum jogo iniciado\nDigite /newgame para iniciar um novo jogo")
 		return None #break
 	if '/quitgame' in msg['message']['text']:
 		avalon.quit(msg['message']['chat']['id'])
@@ -414,6 +501,15 @@ def groupMode(msg):
 		else:
 			bot.sendMessage(msg['message']['chat']['id'],
 				'@'+msg['message']['from']['username'] + ' você não estava no jogo \U0001F609')
+		return None
+	if '/remember' in msg['message']['text'] and avalon.games[x].state != 0:
+		avalon.games[x].remember(msg['message']['from']['id'])
+		return None
+	if '/leader' in msg['message']['text'] and avalon.games[x].state != 0:
+		avalon.games[x].leader(msg['message']['from']['id'])
+		return None
+	if '/history' in msg['message']['text'] and avalon.games[x].state != 0:
+		avalon.games[x].getHistory(msg['message']['from']['id'])
 		return None
 
 
