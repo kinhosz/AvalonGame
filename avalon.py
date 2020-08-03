@@ -1,4 +1,4 @@
-import telepot,time
+import telepot,time,random
 from telepot.namedtuple import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardRemove
 
 bot = telepot.Bot('1331608627:AAFgtfQqyP6d-hA8yUy2aMkEw4dgzC0ULGg')
@@ -34,23 +34,35 @@ def receiveMessage():
 ############################# player class #############################################
 class player:
 
-	def __init__(self,id,name):
-		self.id = id
+	def __init__(self,id_name,name):
+		self.id = id_name
+		self.isBot = False
 		self.name = name
 		self.roles = []
+		self.seed = -1
+		self.spy = False
+############################# bot player ###############################################
+class botPlayer:
+
+	def __init__(self,num):
+		self.isBot = True
+		self.name = "Bot0" + str(num)
+		self.roles = []
+		self.seed = -1
+		self.spy = False
 ############################# config ###################################################
 class config:
 
-	def __init__(self,chatId,msgId,text):
+	def __init__(self,chatId,msgId):
 		self.chatId = chatId
 		self.msgId = msgId
 		self.roles = ["Merlin"]
-		self.text = text
+		self.text = ""
 ############################# Game class ###############################################
 class game:
 
-	def __init__(self,id):
-		self.id = id
+	def __init__(self,id_game):
+		self.id = id_game
 		self.state = 0
 		self.totalPlayers = 0
 		self.roles = []
@@ -58,14 +70,16 @@ class game:
 		self.players = []
 		self.owner = ""
 
-	def setting(self,msg_id,text):
-		self.messageSetting = config(self.id,msg_id,text)
+	def setting(self,msg_id):
+		self.messageSetting = config(self.id,msg_id)
 
 	def getSettingIdentifier(self):
 		return (self.messageSetting.chatId,self.messageSetting.msgId)
 
 	def getSettingText(self):
-		return self.messageSetting.text
+		retS = "Quais destes papéis você, @" + self.owner + ", deseja adicionar?"
+		retS = retS + self.messageSetting.text
+		return retS
 
 	def getSettingReply(self):
 		L = []
@@ -79,7 +93,7 @@ class game:
 	def settingUpdate(self,data):
 		self.messageSetting.roles.remove(data)
 		if data == 'Merlin':
-			self.messageSetting.text = self.messageSetting.text + "\nAdicionados:\n- Merlin\n- Assassino"
+			self.messageSetting.text = self.messageSetting.text + "\nAdicionados:\n- Merlin\n- Assassin"
 			self.messageSetting.roles.append("Percy")
 			self.messageSetting.roles.append("Palm")
 			self.roles.append("Merlin")
@@ -97,6 +111,136 @@ class game:
 		if data == 'Palm':
 			self.messageSetting.text = self.messageSetting.text + "\n- Palm"
 			self.roles.append("Palm")
+
+	def addBots(self,Q):
+		for curr in range(1,Q+1):
+			self.players.append(botPlayer(curr))
+		self.totalPlayers = self.totalPlayers + Q
+
+	def shuffle(self):
+		pos = 0
+		while pos < self.totalPlayers:
+			self.players[pos].seed = random.randint(1,100)
+			pos = pos + 1
+		pi = 0
+		while pi < self.totalPlayers:
+			pj = pi + 1
+			while pj < self.totalPlayers:
+				if self.players[pi].seed > self.players[pj].seed:
+					L = self.players[pi]
+					self.players[pi] = self.players[pj]
+					self.players[pj] = L
+				pj = pj + 1
+			pi = pi + 1
+
+	def setRoles(self):
+		cont = 0
+		totalSpy = 0
+		for P in self.roles:
+			if P == "Palm":
+				continue
+			if P == "Assassin" or P == "Morgana":
+				if "Palm" in self.players[cont].roles:
+					cont = cont + 1
+				totalSpy = totalSpy + 1
+				self.players[cont].spy = True
+				self.players[cont].roles.append(P)
+			else:
+				self.players[cont].roles.append(P)
+			cont = cont + 1
+		totalSpy = int(int(self.totalPlayers - 1)//2) - totalSpy 
+		cont = 0
+		while totalSpy > 0:
+			if len(self.players[cont].roles) == 0:
+				self.players[cont].spy = True
+				totalSpy = totalSpy - 1
+			cont = cont + 1
+
+	def sendInfo(self,P):
+		if P.isBot:
+			return None
+		emoji = ""
+		pi = 0
+		while pi < 10:
+			if P.spy:
+				emoji = emoji + "\U0001F534"
+			else:
+				emoji = emoji + "\U0001F535"
+			pi = pi + 1
+
+		if "Merlin" in P.roles:
+			retorno = ""
+			for x in self.players:
+				if x.name == P.name:
+					continue
+				if x.spy or ("Palm" in x.roles):
+					retorno = retorno + " - " + x.name
+			bot.sendMessage(P.id,str(emoji)+"\n\nVocê é o MERLIN\n\n"+
+				"Os espiões são:\n\n" + str(retorno)+"\n\n" + str(emoji))
+
+		elif "Morgana" in P.roles:
+			retorno = ""
+			for x in self.players:
+				if x.name == P.name:
+					continue
+				if x.spy or ("Palm" in x.roles):
+					retorno = retorno + " - " + x.name
+			bot.sendMessage(P.id,str(emoji)+"\n\nVocê é a MORGANA\n\n"+
+				"Os outros espiões são:\n\n"+str(retorno)+"\n\n"+str(emoji))
+
+		elif "Percy" in P.roles:
+			retorno = ""
+			for x in self.players:
+				if x.name == P.name:
+					continue
+				if ("Merlin" in x.roles) or ("Morgana" in x.roles):
+					retorno = retorno + " - " + x.name
+			bot.sendMessage(P.id,str(emoji)+"\n\nVocê é o PERCY\n\n"+
+				"O Merlin é um desses jogadores:\n\n" + str(retorno)+"\n\n"+str(emoji))
+
+		elif "Assassin" in P.roles:
+			retorno = ""
+			for x in self.players:
+				if x.name == P.name:
+					continue
+				if x.spy or ("Palm" in x.roles):
+					retorno = retorno + " - " + x.name
+			bot.sendMessage(P.id,str(emoji)+"\n\nVocê é o ASSASSINO\n\n"+
+				"Os outros espiões são:\n\n"+ str(retorno)+"\n\n"+str(emoji))
+
+		elif P.spy:
+			retorno = ""
+			for x in self.players:
+				if x.name == P.name:
+					continue
+				if x.spy or ("Palm" in x.roles):
+					retorno = retorno + " - " + x.name
+			bot.sendMessage(P.id,str(emoji)+"\n\nVocê é um ESPIÃO\n\n"+
+				"Os outros espiões são:\n\n" + str(retorno)+"\n\n"+str(emoji))
+		else:
+			bot.sendMessage(P.id,str(emoji)+"\n\nVocê é da RESISTÊNCIA\n\n" + 
+				"Ajude seu time a vencer!\n\n"+str(emoji))
+
+	def sendAllInfo(self):
+		for P in self.players:
+			self.sendInfo(P)
+
+	def printAllInfo(self):
+		for P in self.players:
+			print(P.name,': ',P.roles)
+
+	def initGame(self):
+		self.state = 1
+		self.shuffle()
+		if "Palm" in self.roles:
+			self.players[0].roles.append("Palm")
+		self.shuffle()
+		self.setRoles()
+		self.shuffle()
+		self.sendAllInfo()
+		self.printAllInfo()
+		bot.sendMessage(self.id,"\U0001F534\U0001F535 Por favor, chequem seus papéis que foram"+
+			" enviados no privado \U0001F534\U0001F535")
 
 ############################# General Class ############################################
 class general:
@@ -194,26 +338,53 @@ def groupMode(msg):
 			bot.sendMessage(msg['message']['chat']['id'],'Um jogo já foi iniciado. Digite /join para entrar ou /quitgame para finalizar o jogo atual')
 		else:
 			avalon.newgame(msg['message']['chat']['id'])
+			avalon.join(msg['message']['from']['id'],msg['message']['from']['username'],msg['message']['chat']['id'])
 			bot.sendMessage(msg['message']['chat']['id'],"Novo jogo criado\U00002705\n\nDigite /join para entrar\n\n"
 					+"Digite /leave para sair\n\nDigite /quitgame para finalizar este jogo\n\n"+
 					"Digite /startgame para a diversão começar\n\n"+"Estou ativo em "+
 					str(avalon.currentGames)+" grupos no momento")
-			strNG = "Quais destes papeis você @" + msg['message']['from']['username']+" deseja adicionar ao jogo?"
-			retMsg = bot.sendMessage(msg['message']['chat']['id'],text = strNG,
+			retMsg = bot.sendMessage(msg['message']['chat']['id'],
+				text = "Quais destes papéis você, @" + msg['message']['from']['username'] + ", deseja adicionar?",
 				reply_markup = InlineKeyboardMarkup(
 					inline_keyboard = [
 					[InlineKeyboardButton(text = "Merlin",callback_data = "Merlin")]
 					]))
 			x = avalon.findGame(msg['message']['chat']['id'])
-			avalon.games[x].setting(retMsg['message_id'],strNG)
+			avalon.games[x].setting(retMsg['message_id'])
 			avalon.games[x].owner = msg['message']['from']['username']
+		return None
 	if isRunning(msg['message']['chat']['id']) == -1:
 		bot.sendMessage(msg['message']['chat']['id'],"Nenhum jogo iniciado. Digite /newgame para iniciar um novo jogo")
 		return None #break
 	if '/quitgame' in msg['message']['text']:
 		avalon.quit(msg['message']['chat']['id'])
 		bot.sendMessage(msg['message']['chat']['id'],"Jogo finalizado.")
+		return None
+
+	x = avalon.findGame(msg['message']['chat']['id']) ## find the game
+
+	if '/startgame' in msg['message']['text']:
+		if avalon.games[x].owner != msg['message']['from']['username']:
+			bot.sendMessage(msg['message']['chat']['id'],"Só @" + avalon.games[x].owner + " pode iniciar"+
+				", pois ele criou a partida.")
+			return None
+		if avalon.games[x].state != 0:
+			bot.sendMessage(msg['message']['chat']['id'],"Você já iniciou este jogo. Digite /quitgame para finalizar"+
+				" o jogo atual")
+			return None
+		if avalon.games[x].totalPlayers < 5:
+			bot.sendMessage(msg['message']['chat']['id'],'Quantidade mínima de jogadores não atingida\U0001F625'+
+				"\nIrei completar com alguns bots\U0001F47E")
+			avalon.games[x].addBots(5 - avalon.games[x].totalPlayers)
+			avalon.games[x].initGame()
+		else:
+			avalon.games[x].initGame()
+		return None
+
 	if '/join' in msg['message']['text']:
+		if avalon.games[x].state != 0:
+			bot.sendMessage(msg['message']['chat']['id'],"Você não pode realizar esta operação, o jogo já foi iniciado.")
+			return None
 		flag = avalon.join(msg['message']['from']['id'],msg['message']['from']['username'],msg['message']['chat']['id'])
 		if flag:
 			bot.sendMessage(msg['message']['chat']['id'],
@@ -221,20 +392,29 @@ def groupMode(msg):
 		else:
 			bot.sendMessage(msg['message']['chat']['id'],
 				'@'+msg['message']['from']['username'] + ' não se preocupe, você já estava no jogo \U00002714')
+		return None
 	if '/leave' in msg['message']['text']:
+		if avalon.games[x].state != 0:
+			bot.sendMessage(msg['message']['chat']['id'],"Você não pode realizar esta operação, o jogo já foi iniciado.")
+			return None
 		flag = avalon.leave(msg['message']['from']['id'],msg['message']['chat']['id'])
 		if flag:
 			bot.sendMessage(msg['message']['chat']['id'],
 				'@'+msg['message']['from']['username'] + ' ficou com medo e saiu do jogo \U0001F61D')
+			if avalon.games[x].totalPlayers == 0:
+				avalon.quit(msg['message']['chat']['id'])
+				bot.sendMessage(msg['message']['chat']['id'],"Por que todo mundo saiu? Jogo finalizado")
+				bot.sendMessage(msg['message']['chat']['id'],"\U0001F63F")
+				return None
+			if msg['message']['from']['username'] == avalon.games[x].owner:
+				avalon.games[x].owner = avalon.games[x].players[0].name
+				bot.editMessageText(msg_identifier = avalon.games[x].getSettingIdentifier(),
+						text = avalon.games[x].getSettingText(),
+						reply_markup = avalon.games[x].getSettingReply())
 		else:
 			bot.sendMessage(msg['message']['chat']['id'],
 				'@'+msg['message']['from']['username'] + ' você não estava no jogo \U0001F609')
-	if '/startgame' in msg['message']['text']:
-		x = avalon.findGame(msg['message']['chat']['id'])
-		if avalon.games[x].totalPlayers < 5:
-			bot.sendMessage(msg['message']['chat']['id'],'Quantidade mínima de jogadores não atingida\U0001F625')
-		else:
-			bot.sendMessage(msg['message']['chat']['id'],"daqui a pouco codo essa parte")
+		return None
 
 
 ######### main #################################################################
@@ -249,8 +429,10 @@ while 1:
 				groupMode(msg)
 	elif 'callback_query' in msg:
 		x = avalon.findGame(msg['callback_query']['message']['chat']['id'])
-		if msg['callback_query']['from']['username'] == avalon.games[x].owner:
-			avalon.games[x].settingUpdate(msg['callback_query']['data'])
-			bot.editMessageText(msg_identifier = avalon.games[x].getSettingIdentifier(),
-				text = avalon.games[x].getSettingText(),
-				reply_markup = avalon.games[x].getSettingReply())
+		if x != -1:
+			if avalon.games[x].state == 0 and msg['callback_query']['message']['message_id'] == avalon.games[x].messageSetting.msgId:
+				if msg['callback_query']['from']['username'] == avalon.games[x].owner:
+					avalon.games[x].settingUpdate(msg['callback_query']['data'])
+					bot.editMessageText(msg_identifier = avalon.games[x].getSettingIdentifier(),
+						text = avalon.games[x].getSettingText(),
+						reply_markup = avalon.games[x].getSettingReply())
