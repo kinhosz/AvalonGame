@@ -62,6 +62,13 @@ class botPlayer:
 			total = total - 1
 		return ans
 
+	def approveMission(self):
+		x = random.randint(0,1)
+		if x == 0:
+			return False
+		else:
+			return True
+
 ############################# config ###################################################
 class config:
 
@@ -94,6 +101,10 @@ class game:
 		self.candidates = []
 		self.remain = -1
 		self.privateMessage = []
+		self.approve = 0
+		self.denied = 0
+		self.waitingVote = []
+		self.currVote = ""
 
 	def setting(self,msg_id):
 		self.messageSetting = config(self.id,msg_id)
@@ -173,7 +184,7 @@ class game:
 			else:
 				self.players[cont].roles.append(P)
 			cont = cont + 1
-		totalSpy = int(int(self.totalPlayers - 1)//2) - totalSpy 
+		totalSpy = self.spies - totalSpy 
 		cont = 0
 		while totalSpy > 0:
 			if len(self.players[cont].roles) == 0:
@@ -255,7 +266,13 @@ class game:
 			print(P.name,': ',P.roles)
 
 	def setVariables(self):
-		self.spies = int(self.totalPlayers - 1)//2
+		if self.totalPlayers == 5 or self.totalPlayers == 6:
+			self.spies = 2
+		elif self.totalPlayers>= 7 or self.totalPlayers <= 9:
+			self.spies = 3
+		else:
+			self.spies = 4
+
 		self.history = "\U000023EA    Histórico    \U000023EA\n\n"
 		self.history = self.history + "Rodada 1:\n\n"
 		if self.totalPlayers == 5:
@@ -329,6 +346,62 @@ class game:
 			pi = pi + 1
 		bot.sendMessage(to,text)
 
+	def editVoteMessage(self):
+		text = "Aguardando os votos de: ["
+		for x in self.waitingVote:
+			text = text + " " + x
+		text = text + "]"
+		bot.editMessageText(msg_identifier = (self.id,self.privateMessage[0]),text = text,
+			reply_markup = InlineKeyboardMarkup(
+				inline_keyboard = [
+				[InlineKeyboardButton(text = "Aprovar",callback_data = "accept"),
+				InlineKeyboardButton(text = "Recusar",callback_data = "denied")]]))
+
+	def pointForSpies(self):
+		bot.sendMessage(self.id,"depois codo isso")
+
+	def gotoMission(self):
+		bot.sendMessage(self.id,"depois codo isso")
+
+	def showResultTeam(self):
+		bot.deleteMessage(msg_identifier = (self.id,self.privateMessage[0]))
+		self.privateMessage.pop()
+		if self.approve > self.denied:
+			self.currVote = self.currVote + "\nTime aprovado\n"
+		else:
+			self.currVote = self.currVote + "\nTime negado\n-------------\n"
+		bot.sendMessage(self.id,self.currVote)
+		self.history = self.history + self.currVote
+		self.currVote = ""
+
+		if self.approve > self.denied:
+			self.gotoMission()
+		elif self.consecutive == 0:
+			self.curr = self.curr + 1
+			if self.curr >= self.totalPlayers:
+				self.curr = 0
+			bot.sendMessage(self.id,"\U0001F6A8 Limite de rejeições atingido \U0001F6A8")
+			self.pointForSpies()
+		else:
+			self.curr = self.curr + 1
+			self.consecutive = self.consecutive - 1
+			if self.curr >= self.totalPlayers:
+				self.curr = 0
+			self.chooseTheTeam()
+
+	def voteReceived(self,who,vote):
+		self.waitingVote.remove(who)
+		if vote == "accept":
+			self.approve = self.approve + 1
+			self.currVote = self.currVote + who + "\U00002705\n"
+		else:
+			self.denied = self.denied + 1
+			self.currVote = self.currVote + who + "\U0000274C\n"
+		if len(self.waitingVote) == 0:
+			self.showResultTeam()
+		else:
+			self.editVoteMessage()
+
 	def isTeamOk(self):
 		text = ""
 		if self.players[self.curr].isBot:
@@ -340,7 +413,32 @@ class game:
 			text = text + "- " + str(x) + "\n"
 		text = text + "\n" + "Você aprova o time?"
 		bot.sendMessage(self.id,text)
-		self.action = "aprove"
+		self.action = "voteTeam"
+		self.approve = 0
+		self.denied = 0
+		self.currVote = "\nO líder " + str(self.players[self.curr].name) + " formou o time:\n["
+		for x in self.currTeam:
+			self.currVote = self.currVote + " " + x
+		self.currVote = self.currVote + "]\n\nResultado dos votos para aprovação do time:\n"
+
+		for x in self.players:
+			if x.isBot:
+				ans = x.approveMission()
+				if ans:
+					self.approve = self.approve + 1
+					self.currVote = self.currVote + x.name + "\U00002705\n"
+				else:
+					self.denied = self.denied + 1
+					self.currVote = self.currVote + x.name + "\U0000274C\n"
+			else:
+				self.waitingVote.append(x.name)
+		tam = len(self.privateMessage) #usar o mesmo pois porém, né
+		while tam > 0:
+			self.privateMessage.pop()
+			tam = tam-1
+		r = bot.sendMessage(self.id,"Aguardando os votos de ")
+		self.privateMessage.append(r['message_id'])
+		self.editVoteMessage()
 
 	def msgLeader(self):
 		text = "Você é o líder da missão. Escolha mais " + str(self.remain) + " jogadores para formar o time\n"
@@ -368,11 +466,14 @@ class game:
 			data = str(self.id) + "$" + str(x)
 			R.append(InlineKeyboardButton(text = str(x),callback_data = data))
 			L.append(R)
+		if self.remain == 0:
+			L = None
 		bot.editMessageText(msg_identifier = (self.players[self.curr].id,self.privateMessage[0]),
 							text = text,reply_markup = InlineKeyboardMarkup(
 								inline_keyboard = L))
 
 	def chooseTheTeam(self):
+
 		text = "\U00002709    Missão " + str(self.state) + "    \U00002709\n\n"
 		text = text + "\U00002B50 "
 		if self.players[self.curr].isBot:
@@ -412,6 +513,7 @@ class game:
 
 	def initGame(self):
 		self.state = 1
+		self.setVariables()
 		self.shuffle()
 		if "Palm" in self.roles:
 			self.players[0].roles.append("Palm")
@@ -422,7 +524,6 @@ class game:
 		self.printAllInfo()
 		bot.sendMessage(self.id,"\U0001F534\U0001F535 Por favor, chequem seus papéis que foram"+
 			" enviados no privado \U0001F534\U0001F535")
-		self.setVariables()
 		self.shuffle()
 		self.remember(self.id)
 		self.chooseTheTeam()
@@ -546,7 +647,6 @@ def groupMode(msg):
 			avalon.games[x].owner = msg['message']['from']['username']
 		return None
 	if isRunning(msg['message']['chat']['id']) == -1:
-		bot.sendMessage(msg['message']['chat']['id'],"Nenhum jogo iniciado\nDigite /newgame para iniciar um novo jogo")
 		return None #break
 	if '/quitgame' in msg['message']['text']:
 		avalon.quit(msg['message']['chat']['id'])
@@ -652,3 +752,6 @@ while 1:
 						bot.editMessageText(msg_identifier = avalon.games[x].getSettingIdentifier(),
 							text = avalon.games[x].getSettingText(),
 							reply_markup = avalon.games[x].getSettingReply())
+				elif avalon.games[x].state != 0 and avalon.games[x].action == "voteTeam":
+					if msg['callback_query']['from']['username'] in avalon.games[x].waitingVote:
+						avalon.games[x].voteReceived(msg['callback_query']['from']['username'],msg['callback_query']['data'])
