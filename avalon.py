@@ -50,6 +50,18 @@ class botPlayer:
 		self.roles = []
 		self.seed = -1
 		self.spy = False
+
+	def myTeam(self,cand,total):
+		ans = []
+		l = len(cand)
+		while total > 0:
+			pi = random.randint(0,l-1)
+			ans.append(cand[pi])
+			cand.pop(pi)
+			l = l -1
+			total = total - 1
+		return ans
+
 ############################# config ###################################################
 class config:
 
@@ -73,9 +85,15 @@ class game:
 		self.mission = []
 		self.needToFail = []
 		self.spies = 0
-		self.points = 0
+		self.Spoints = 0
+		self.Rpoints = 0
 		self.curr = 0
 		self.consecutive = 3
+		self.action = ""
+		self.currTeam = []
+		self.candidates = []
+		self.remain = -1
+		self.privateMessage = []
 
 	def setting(self,msg_id):
 		self.messageSetting = config(self.id,msg_id)
@@ -311,6 +329,86 @@ class game:
 			pi = pi + 1
 		bot.sendMessage(to,text)
 
+	def isTeamOk(self):
+		text = ""
+		if self.players[self.curr].isBot:
+			text = text + str(self.players[self.curr].name)
+		else:
+			text = text + "@" + str(self.players[self.curr].name)
+		text = text + " escolheu:\n\n"
+		for x in self.currTeam:
+			text = text + "- " + str(x) + "\n"
+		text = text + "\n" + "Você aprova o time?"
+		bot.sendMessage(self.id,text)
+		self.action = "aprove"
+
+	def msgLeader(self):
+		text = "Você é o líder da missão. Escolha mais " + str(self.remain) + " jogadores para formar o time\n"
+		text = text + "Time atual:\n"
+		L = []
+		for x in self.currTeam:
+			text = text + "- " + str(x) + "\n"
+		for x in self.candidates:
+			R = []
+			data = str(self.id) + "$" + str(x)
+			R.append(InlineKeyboardButton(text = str(x),callback_data = data))
+			L.append(R)
+		r = bot.sendMessage(self.players[self.curr].id,text = text,
+			reply_markup = InlineKeyboardMarkup(inline_keyboard = L))
+		self.privateMessage.append(r['message_id'])
+
+	def editMsgLeader(self):
+		text = "Você é o líder da missão. Escolha mais " + str(self.remain) + " jogadores para formar o time\n"
+		text = text + "Time atual:\n"
+		L = []
+		for x in self.currTeam:
+			text = text + "- " + str(x) + "\n"
+		for x in self.candidates:
+			R = []
+			data = str(self.id) + "$" + str(x)
+			R.append(InlineKeyboardButton(text = str(x),callback_data = data))
+			L.append(R)
+		bot.editMessageText(msg_identifier = (self.players[self.curr].id,self.privateMessage[0]),
+							text = text,reply_markup = InlineKeyboardMarkup(
+								inline_keyboard = L))
+
+	def chooseTheTeam(self):
+		text = "\U00002709    Missão " + str(self.state) + "    \U00002709\n\n"
+		text = text + "\U00002B50 "
+		if self.players[self.curr].isBot:
+			text = text + str(self.players[self.curr].name)
+		else:
+			text = text + "@" + str(self.players[self.curr].name)
+		text = text + ", Você é o líder da missão. Escolha " + str(self.mission[self.state-1])
+		text = text + " jogadores para formar seu time. Lembre-se, "
+		if self.needToFail[self.state] == 1:
+			text = text + "é necessária apenas uma falha para a missão ser sabotada, caso o time seja aprovado"
+		else:
+			text = text + "são necessárias " + str(self.needToFail(self.state-1)) + " falhas para a missão ser sabotada,"
+			text = text + " caso o time seja aprovado"
+		bot.sendMessage(self.id,text)
+		self.remain = self.mission[self.state-1]
+		self.currTeam = []
+		self.candidates = getNames(self.players)
+
+		if self.players[self.curr].isBot:
+			self.currTeam = self.players[self.curr].myTeam(cand = self.candidates,total = self.mission[self.state-1])
+			self.remain = 0
+			self.candidates = []
+			self.isTeamOk()
+		else:
+			self.action = "choose"
+			self.msgLeader()
+
+	def updateTeam(self,p):
+		self.remain = self.remain - 1
+		self.candidates.remove(p)
+		self.currTeam.append(p)
+		self.editMsgLeader()
+		if self.remain == 0:
+			self.privateMessage.pop()
+			self.isTeamOk()
+
 
 	def initGame(self):
 		self.state = 1
@@ -327,6 +425,7 @@ class game:
 		self.setVariables()
 		self.shuffle()
 		self.remember(self.id)
+		self.chooseTheTeam()
 
 
 ############################# General Class ############################################
@@ -358,10 +457,11 @@ class general:
 			if chat == G.id:
 				return True
 		return False
-	def findGame(self,id):
+	def findGame(self,idG):
 		pos = 0
-		for G in self.games:
-			if G.id == id:
+		while pos < self.currentGames:
+			print(self.games[pos].id,' + ',idG)
+			if str(self.games[pos].id) == str(idG):
 				return pos
 			pos = pos + 1
 		return -1
@@ -396,7 +496,12 @@ class general:
 def isRunning(chat):
 	global avalon
 	return avalon.findGame(chat)
-
+####################### getNames ######################################################
+def getNames(L):
+	LL = []
+	for x in L:
+		LL.append(x.name)
+	return LL
 
 ####### some global variables ##########################################################
 sentMessage = None
@@ -524,11 +629,26 @@ while 1:
 			else:
 				groupMode(msg)
 	elif 'callback_query' in msg:
-		x = avalon.findGame(msg['callback_query']['message']['chat']['id'])
-		if x != -1:
-			if avalon.games[x].state == 0 and msg['callback_query']['message']['message_id'] == avalon.games[x].messageSetting.msgId:
-				if msg['callback_query']['from']['username'] == avalon.games[x].owner:
-					avalon.games[x].settingUpdate(msg['callback_query']['data'])
-					bot.editMessageText(msg_identifier = avalon.games[x].getSettingIdentifier(),
-						text = avalon.games[x].getSettingText(),
-						reply_markup = avalon.games[x].getSettingReply())
+		if 'private' == msg['callback_query']['message']['chat']['type']:
+			data = str(msg['callback_query']['data']).split("$")
+			x = avalon.findGame(str(data[0]))
+			print('idg -> ',avalon.games[0].id)
+			print('chat -> ', data[0])
+			print('x -> ',x)
+			if x == -1:
+				continue
+			if avalon.games[x].state == 0:
+				continue
+			if msg['callback_query']['message']['message_id'] in avalon.games[x].privateMessage:
+				if avalon.games[x].action == "choose":
+					avalon.games[x].updateTeam(str(data[1]))
+
+		else:
+			x = avalon.findGame(msg['callback_query']['message']['chat']['id'])
+			if x != -1:
+				if avalon.games[x].state == 0 and msg['callback_query']['message']['message_id'] == avalon.games[x].messageSetting.msgId:
+					if msg['callback_query']['from']['username'] == avalon.games[x].owner:
+						avalon.games[x].settingUpdate(msg['callback_query']['data'])
+						bot.editMessageText(msg_identifier = avalon.games[x].getSettingIdentifier(),
+							text = avalon.games[x].getSettingText(),
+							reply_markup = avalon.games[x].getSettingReply())
