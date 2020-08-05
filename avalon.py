@@ -24,7 +24,14 @@ aboutTXT = "depois digito o about"
 ################## flip message ########################################################
 def receiveMessage():
 	global old_id
+	x = len(Queue)
+	while x > 0:
+		avalon.quit(Queue[x-1])
+		Queue.pop()
+		x = x - 1
+
 	while 1:
+		time.sleep(0.1)
 		upd = bot.getUpdates(offset = old_id)
 		if len(upd) != 0:
 			old_id = upd[0]['update_id']
@@ -63,6 +70,7 @@ class botPlayer:
 		return ans
 
 	def approveMission(self):
+		return False
 		x = random.randint(0,1)
 		if x == 0:
 			return False
@@ -107,6 +115,7 @@ class game:
 		self.currVote = ""
 
 	def setting(self,msg_id):
+		
 		self.messageSetting = config(self.id,msg_id)
 
 	def getSettingIdentifier(self):
@@ -127,6 +136,8 @@ class game:
 		return obj
 
 	def settingUpdate(self,data):
+		if data not in self.messageSetting.roles:
+			return None
 		self.messageSetting.roles.remove(data)
 		if data == 'Merlin':
 			self.messageSetting.text = self.messageSetting.text + "\nAdicionados:\n- Merlin\n- Assassin"
@@ -193,6 +204,7 @@ class game:
 			cont = cont + 1
 
 	def sendInfo(self,P):
+		
 		if P.isBot:
 			return None
 		emoji = ""
@@ -211,7 +223,7 @@ class game:
 					continue
 				if x.spy or ("Palm" in x.roles):
 					retorno = retorno + " - " + x.name
-			bot.sendMessage(P.id,str(emoji)+"\n\nVocê é o MERLIN\n\n"+
+			sendMessage(P.id,str(emoji)+"\n\nVocê é o MERLIN\n\n"+
 				"Os espiões são:\n\n" + str(retorno)+"\n\n" + str(emoji))
 
 		elif "Morgana" in P.roles:
@@ -221,7 +233,7 @@ class game:
 					continue
 				if x.spy or ("Palm" in x.roles):
 					retorno = retorno + " - " + x.name
-			bot.sendMessage(P.id,str(emoji)+"\n\nVocê é a MORGANA\n\n"+
+			sendMessage(P.id,str(emoji)+"\n\nVocê é a MORGANA\n\n"+
 				"Os outros espiões são:\n\n"+str(retorno)+"\n\n"+str(emoji))
 
 		elif "Percy" in P.roles:
@@ -231,7 +243,7 @@ class game:
 					continue
 				if ("Merlin" in x.roles) or ("Morgana" in x.roles):
 					retorno = retorno + " - " + x.name
-			bot.sendMessage(P.id,str(emoji)+"\n\nVocê é o PERCY\n\n"+
+			sendMessage(P.id,str(emoji)+"\n\nVocê é o PERCY\n\n"+
 				"O Merlin é um desses jogadores:\n\n" + str(retorno)+"\n\n"+str(emoji))
 
 		elif "Assassin" in P.roles:
@@ -241,7 +253,7 @@ class game:
 					continue
 				if x.spy or ("Palm" in x.roles):
 					retorno = retorno + " - " + x.name
-			bot.sendMessage(P.id,str(emoji)+"\n\nVocê é o ASSASSINO\n\n"+
+			sendMessage(P.id,str(emoji)+"\n\nVocê é o ASSASSINO\n\n"+
 				"Os outros espiões são:\n\n"+ str(retorno)+"\n\n"+str(emoji))
 
 		elif P.spy:
@@ -251,10 +263,10 @@ class game:
 					continue
 				if x.spy or ("Palm" in x.roles):
 					retorno = retorno + " - " + x.name
-			bot.sendMessage(P.id,str(emoji)+"\n\nVocê é um ESPIÃO\n\n"+
+			sendMessage(P.id,str(emoji)+"\n\nVocê é um ESPIÃO\n\n"+
 				"Os outros espiões são:\n\n" + str(retorno)+"\n\n"+str(emoji))
 		else:
-			bot.sendMessage(P.id,str(emoji)+"\n\nVocê é da RESISTÊNCIA\n\n" + 
+			sendMessage(P.id,str(emoji)+"\n\nVocê é da RESISTÊNCIA\n\n" + 
 				"Ajude seu time a vencer!\n\n"+str(emoji))
 
 	def sendAllInfo(self):
@@ -319,7 +331,9 @@ class game:
 			self.needToFail.append(1)
 			self.needToFail.append(2)
 			self.needToFail.append(1)
+
 	def remember(self,to):
+		
 		text = "\U0001F4AD    Relembrando    \U0001F4AD\n\n"
 		text = text + "existem " + str(self.spies) + " espiões e " + str(self.totalPlayers - self.spies)
 		text = text + " resistentes\n" + "Papéis adicionais: "
@@ -327,10 +341,14 @@ class game:
 			text = text + P + " "
 		text = text + "\n\nDigite /remember para rever esta mensagem\n\nDigite /leader para visualizar a ordem dos"
 		text = text + " próximos líderes das missões\n\n Digite /history para visualizar o histórico de votações"
-		bot.sendMessage(to,text)
+		sendMessage(to,text)
+
 	def getHistory(self,to):
-		bot.sendMessage(to,self.history)
+		
+		sendMessage(to,self.history)
+
 	def leader(self,to):
+		
 		finish = self.curr + self.consecutive
 		if finish >= self.totalPlayers:
 			finish = finish - self.totalPlayers
@@ -344,9 +362,10 @@ class game:
 				text = text + " " + "\U0001F448"
 			text = text + "\n"
 			pi = pi + 1
-		bot.sendMessage(to,text)
+		sendMessage(to,text)
 
 	def editVoteMessage(self):
+		
 		text = "Aguardando os votos de: ["
 		for x in self.waitingVote:
 			text = text + " " + x
@@ -357,20 +376,64 @@ class game:
 				[InlineKeyboardButton(text = "Aprovar",callback_data = "accept"),
 				InlineKeyboardButton(text = "Recusar",callback_data = "denied")]]))
 
+	def endOfGame(self,text):
+		
+		for x in self.players:
+			if x.spy:
+				text = text + "\U0001F534"
+			else:
+				text = text + "\U0001F535"
+			text = text + x.name + ": "
+			for y in x.roles:
+				text = text + y + " "
+			text = text + "\n"
+		sendMessage(self.id,text)
+		Queue.append(self.id)
+
 	def pointForSpies(self):
-		bot.sendMessage(self.id,"depois codo isso")
+		
+		self.Spoints = self.Spoints + 1
+		if self.Spoints == 3:
+			text = "\U0001F534   Vitória dos ESPIÕES   \U0001F534\n\n\n"
+			self.endOfGame(text)
+		else:
+			
+			sendMessage(self.id,"Ponto para os espiões\nEspiões: " + str(self.Spoints)+
+				"\nResistência: " + str(self.Rpoints))
+			self.consecutive = 3
+			self.state = self.state + 1
+			self.chooseTheTeam()
+
+	def pointForResistance(self):
+		
+		self.Rpoints = self.Rpoints + 1
+		if self.Rpoints == 3:
+			if "Merlin" in self.roles:
+				self.killMerlin()
+			else:
+				text = "\U0001F535   Vitória da RESISTÊNCIA   \U0001F535\n\n\n"
+				self.endOfGame(text)
+		else:
+			
+			sendMessage(self.id,"Ponto para a resistência\nEspiões: " + str(self.Spoints)+
+				"\nResistência: " + str(self.Rpoints))
+			self.consecutive = 3
+			self.state = self.state + 1
+			self.chooseTheTeam()
 
 	def gotoMission(self):
-		bot.sendMessage(self.id,"depois codo isso")
+		
+		sendMessage(self.id,"depois codo isso")
 
 	def showResultTeam(self):
+		
 		bot.deleteMessage(msg_identifier = (self.id,self.privateMessage[0]))
 		self.privateMessage.pop()
 		if self.approve > self.denied:
 			self.currVote = self.currVote + "\nTime aprovado\n"
 		else:
-			self.currVote = self.currVote + "\nTime negado\n-------------\n"
-		bot.sendMessage(self.id,self.currVote)
+			self.currVote = self.currVote + "\nTime negado\n----------------------------------------\n"
+		sendMessage(self.id,self.currVote)
 		self.history = self.history + self.currVote
 		self.currVote = ""
 
@@ -380,7 +443,7 @@ class game:
 			self.curr = self.curr + 1
 			if self.curr >= self.totalPlayers:
 				self.curr = 0
-			bot.sendMessage(self.id,"\U0001F6A8 Limite de rejeições atingido \U0001F6A8")
+			sendMessage(self.id,"\U0001F6A8 Limite de rejeições atingido \U0001F6A8")
 			self.pointForSpies()
 		else:
 			self.curr = self.curr + 1
@@ -403,6 +466,7 @@ class game:
 			self.editVoteMessage()
 
 	def isTeamOk(self):
+		
 		text = ""
 		if self.players[self.curr].isBot:
 			text = text + str(self.players[self.curr].name)
@@ -412,7 +476,7 @@ class game:
 		for x in self.currTeam:
 			text = text + "- " + str(x) + "\n"
 		text = text + "\n" + "Você aprova o time?"
-		bot.sendMessage(self.id,text)
+		sendMessage(self.id,text)
 		self.action = "voteTeam"
 		self.approve = 0
 		self.denied = 0
@@ -436,11 +500,12 @@ class game:
 		while tam > 0:
 			self.privateMessage.pop()
 			tam = tam-1
-		r = bot.sendMessage(self.id,"Aguardando os votos de ")
+		r = sendMessage(self.id,text = "Aguardando os votos de ")
 		self.privateMessage.append(r['message_id'])
 		self.editVoteMessage()
 
 	def msgLeader(self):
+		
 		text = "Você é o líder da missão. Escolha mais " + str(self.remain) + " jogadores para formar o time\n"
 		text = text + "Time atual:\n"
 		L = []
@@ -451,11 +516,12 @@ class game:
 			data = str(self.id) + "$" + str(x)
 			R.append(InlineKeyboardButton(text = str(x),callback_data = data))
 			L.append(R)
-		r = bot.sendMessage(self.players[self.curr].id,text = text,
+		r = sendMessage(self.players[self.curr].id,text = text,
 			reply_markup = InlineKeyboardMarkup(inline_keyboard = L))
 		self.privateMessage.append(r['message_id'])
 
 	def editMsgLeader(self):
+		
 		text = "Você é o líder da missão. Escolha mais " + str(self.remain) + " jogadores para formar o time\n"
 		text = text + "Time atual:\n"
 		L = []
@@ -473,7 +539,7 @@ class game:
 								inline_keyboard = L))
 
 	def chooseTheTeam(self):
-
+		
 		text = "\U00002709    Missão " + str(self.state) + "    \U00002709\n\n"
 		text = text + "\U00002B50 "
 		if self.players[self.curr].isBot:
@@ -487,7 +553,8 @@ class game:
 		else:
 			text = text + "são necessárias " + str(self.needToFail(self.state-1)) + " falhas para a missão ser sabotada,"
 			text = text + " caso o time seja aprovado"
-		bot.sendMessage(self.id,text)
+		
+		sendMessage(self.id,text)
 		self.remain = self.mission[self.state-1]
 		self.currTeam = []
 		self.candidates = getNames(self.players)
@@ -512,6 +579,7 @@ class game:
 
 
 	def initGame(self):
+		
 		self.state = 1
 		self.setVariables()
 		self.shuffle()
@@ -522,7 +590,7 @@ class game:
 		self.shuffle()
 		self.sendAllInfo()
 		self.printAllInfo()
-		bot.sendMessage(self.id,"\U0001F534\U0001F535 Por favor, chequem seus papéis que foram"+
+		sendMessage(self.id,"\U0001F534\U0001F535 Por favor, chequem seus papéis que foram"+
 			" enviados no privado \U0001F534\U0001F535")
 		self.shuffle()
 		self.remember(self.id)
@@ -579,6 +647,7 @@ class general:
 			pos = pos + 1
 		return False
 	def leave(self,id_player,chat):
+		
 		pos = 0
 		while pos < self.currentGames:
 			if self.games[pos].id == chat:
@@ -603,24 +672,30 @@ def getNames(L):
 	for x in L:
 		LL.append(x.name)
 	return LL
+###################### send Message ####################################################
+def sendMessage(to,text,reply_markup = None):
+	r = bot.sendMessage(to,text = text,reply_markup = reply_markup)
+	time.sleep(3)
+	return r
 
 ####### some global variables ##########################################################
 sentMessage = None
 avalon = general()
+Queue = []
 
 ############################### private mode ##########################################
 def privateMode(msg):
 	
 	if '/start' == msg['message']['text']:
-		bot.sendMessage(msg['message']['from']['id'],welcomeTXT)
+		sendMessage(msg['message']['from']['id'],welcomeTXT)
 	if '/newgame' == msg['message']['text']:
-		bot.sendMessage(msg['message']['from']['id'],"Este comando só funciona em grupos ou supergrupos \U0000274C")
+		sendMessage(msg['message']['from']['id'],"Este comando só funciona em grupos ou supergrupos \U0000274C")
 	if '/help' == msg['message']['text']:
-		bot.sendMessage(msg['message']['from']['id'],helpTXT)
+		sendMessage(msg['message']['from']['id'],helpTXT)
 	if '/about' == msg['message']['text']:
-		bot.sendMessage(msg['message']['from']['id'],aboutTXT)
+		sendMessage(msg['message']['from']['id'],aboutTXT)
 	if '/list' == msg['message']['text']:
-		bot.sendMessage(msg['message']['from']['id'],listTXT)
+		sendMessage(msg['message']['from']['id'],listTXT)
 
 ############################## group mode #############################################
 def groupMode(msg):
@@ -628,15 +703,15 @@ def groupMode(msg):
 
 	if '/newgame' in msg['message']['text']:
 		if isRunning(msg['message']['chat']['id']) != -1:
-			bot.sendMessage(msg['message']['chat']['id'],'Um jogo já foi iniciado. Digite /join para entrar ou /quitgame para finalizar o jogo atual')
+			sendMessage(msg['message']['chat']['id'],'Um jogo já foi iniciado. Digite /join para entrar ou /quitgame para finalizar o jogo atual')
 		else:
 			avalon.newgame(msg['message']['chat']['id'])
 			avalon.join(msg['message']['from']['id'],msg['message']['from']['username'],msg['message']['chat']['id'])
-			bot.sendMessage(msg['message']['chat']['id'],"Novo jogo criado\U00002705\n\nDigite /join para entrar\n\n"
+			sendMessage(msg['message']['chat']['id'],"Novo jogo criado\U00002705\n\nDigite /join para entrar\n\n"
 					+"Digite /leave para sair\n\nDigite /quitgame para finalizar este jogo\n\n"+
 					"Digite /startgame para a diversão começar\n\n"+"Estou ativo em "+
 					str(avalon.currentGames)+" grupos no momento")
-			retMsg = bot.sendMessage(msg['message']['chat']['id'],
+			retMsg = sendMessage(msg['message']['chat']['id'],
 				text = "Quais destes papéis você, @" + msg['message']['from']['username'] + ", deseja adicionar?",
 				reply_markup = InlineKeyboardMarkup(
 					inline_keyboard = [
@@ -650,22 +725,22 @@ def groupMode(msg):
 		return None #break
 	if '/quitgame' in msg['message']['text']:
 		avalon.quit(msg['message']['chat']['id'])
-		bot.sendMessage(msg['message']['chat']['id'],"Jogo finalizado.")
+		sendMessage(msg['message']['chat']['id'],"Jogo finalizado.")
 		return None
 
 	x = avalon.findGame(msg['message']['chat']['id']) ## find the game
 
 	if '/startgame' in msg['message']['text']:
 		if avalon.games[x].owner != msg['message']['from']['username']:
-			bot.sendMessage(msg['message']['chat']['id'],"Só @" + avalon.games[x].owner + " pode iniciar"+
+			sendMessage(msg['message']['chat']['id'],"Só @" + avalon.games[x].owner + " pode iniciar"+
 				", pois ele criou a partida.")
 			return None
 		if avalon.games[x].state != 0:
-			bot.sendMessage(msg['message']['chat']['id'],"Você já iniciou este jogo. Digite /quitgame para finalizar"+
+			sendMessage(msg['message']['chat']['id'],"Você já iniciou este jogo. Digite /quitgame para finalizar"+
 				" o jogo atual")
 			return None
 		if avalon.games[x].totalPlayers < 5:
-			bot.sendMessage(msg['message']['chat']['id'],'Quantidade mínima de jogadores não atingida\U0001F625'+
+			sendMessage(msg['message']['chat']['id'],'Quantidade mínima de jogadores não atingida\U0001F625'+
 				"\nIrei completar com alguns bots\U0001F47E")
 			avalon.games[x].addBots(5 - avalon.games[x].totalPlayers)
 			avalon.games[x].initGame()
@@ -675,28 +750,28 @@ def groupMode(msg):
 
 	if '/join' in msg['message']['text']:
 		if avalon.games[x].state != 0:
-			bot.sendMessage(msg['message']['chat']['id'],"Você não pode realizar esta operação, o jogo já foi iniciado.")
+			sendMessage(msg['message']['chat']['id'],"Você não pode realizar esta operação, o jogo já foi iniciado.")
 			return None
 		flag = avalon.join(msg['message']['from']['id'],msg['message']['from']['username'],msg['message']['chat']['id'])
 		if flag:
-			bot.sendMessage(msg['message']['chat']['id'],
+			sendMessage(msg['message']['chat']['id'],
 				'@'+msg['message']['from']['username'] + ' se juntou ao game \U0000270C')
 		else:
-			bot.sendMessage(msg['message']['chat']['id'],
+			sendMessage(msg['message']['chat']['id'],
 				'@'+msg['message']['from']['username'] + ' não se preocupe, você já estava no jogo \U00002714')
 		return None
 	if '/leave' in msg['message']['text']:
 		if avalon.games[x].state != 0:
-			bot.sendMessage(msg['message']['chat']['id'],"Você não pode realizar esta operação, o jogo já foi iniciado.")
+			sendMessage(msg['message']['chat']['id'],"Você não pode realizar esta operação, o jogo já foi iniciado.")
 			return None
 		flag = avalon.leave(msg['message']['from']['id'],msg['message']['chat']['id'])
 		if flag:
-			bot.sendMessage(msg['message']['chat']['id'],
+			sendMessage(msg['message']['chat']['id'],
 				'@'+msg['message']['from']['username'] + ' ficou com medo e saiu do jogo \U0001F61D')
 			if avalon.games[x].totalPlayers == 0:
 				avalon.quit(msg['message']['chat']['id'])
-				bot.sendMessage(msg['message']['chat']['id'],"Por que todo mundo saiu? Jogo finalizado")
-				bot.sendMessage(msg['message']['chat']['id'],"\U0001F63F")
+				sendMessage(msg['message']['chat']['id'],"Por que todo mundo saiu? Jogo finalizado")
+				sendMessage(msg['message']['chat']['id'],"\U0001F63F")
 				return None
 			if msg['message']['from']['username'] == avalon.games[x].owner:
 				avalon.games[x].owner = avalon.games[x].players[0].name
@@ -704,7 +779,7 @@ def groupMode(msg):
 						text = avalon.games[x].getSettingText(),
 						reply_markup = avalon.games[x].getSettingReply())
 		else:
-			bot.sendMessage(msg['message']['chat']['id'],
+			sendMessage(msg['message']['chat']['id'],
 				'@'+msg['message']['from']['username'] + ' você não estava no jogo \U0001F609')
 		return None
 	if '/remember' in msg['message']['text'] and avalon.games[x].state != 0:
