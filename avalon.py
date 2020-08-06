@@ -49,7 +49,7 @@ listTXT = listTXT + "/history \U000027a1 veja o histórico de votações do jogo
 
 aboutTXT = "Olá, obrigado por usar meu bot !!\n\nCaso você encontre algum bug, deseja fazer críticas ou queira sugerir melhorias, entre em"
 aboutTXT = aboutTXT + " contato com meu canal direto no telegram: @kinhosz\n\nEste é um projeto open source, visite meu repositório em"
-aboutTXT = aboutTXT + " <p> link aqui </p>, siga e deixe seu gostei para me incentivar a realizar mais projetos deste tipo\U00002764"
+aboutTXT = aboutTXT + " (https://github.com/kinhosz/AvalonGame), siga e deixe seu gostei para me incentivar a realizar mais projetos deste tipo\U00002764"
 
 rolesTXT = "Papéis adicionais\n\n"
 rolesTXT = rolesTXT + "Merlin \U000027a1 É da resistência. Ao iniciar o jogo ele recebe informações adicionais sobre quem são os"
