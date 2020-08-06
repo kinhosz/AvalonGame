@@ -1,7 +1,7 @@
 import telepot,time,random
 from telepot.namedtuple import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardRemove
 
-bot = telepot.Bot('1331608627:AAFgtfQqyP6d-hA8yUy2aMkEw4dgzC0ULGg')
+bot = telepot.Bot('Your token here')
 
 ##########init##########
 old_id = 0
@@ -18,9 +18,59 @@ welcomeTXT = welcomeTXT + '/help \U000027a1 obter ajuda sobre a mecânica do jog
 welcomeTXT = welcomeTXT + '/about \U000027a1 mais informações sobre mim e meu criador\n'
 welcomeTXT = welcomeTXT + '/list \U000027a1 liste todos os comandos deste bot\n'
 
-helpTXT = "depois eu digito o help aqui"
-listTXT = "depois eu digito os comandos aqui"
-aboutTXT = "depois digito o about"
+helpTXT = "Avalon é uma vertente do jogo THE RESISTANCE. Os jogadores são dividos em dois grupos: resistentes e espiões."
+helpTXT = helpTXT + " Os resistentes estão tentando derrubar o governo, espiões são os infiltrados do governo colocados"
+helpTXT = helpTXT + " com o objetivo de desestabilizar o grupo. O objetivo do jogo é descobrir quem são os espiões por meio das"
+helpTXT = helpTXT + " missões.\n\nMissões \U000027a1 O jogo é composto por 5 missões no total, a cada rodada um líder é responsável por"
+helpTXT = helpTXT + " escolher um grupo de pessoas (com ele incluso, ou não) para ir à missão. Este grupo passa por uma votação,"
+helpTXT = helpTXT + " a maioria dos jogadores deve votar se aprova ou não o time escolhido. Se não for aprovado, o líder é trocado"
+helpTXT = helpTXT + " e é montado um novo time. Se acontecer 4 rejeições seguidas os espiões recebem 1 ponto. Se o time for aprovado"
+helpTXT = helpTXT + " então apenas eles participam de uma votação para sabotar ou não a missão. A resistência nunca pode sabotar uma missão."
+helpTXT = helpTXT + " Se a missão possuir a quantidade suficiente de votos para ser sabotada, então ela é, caso contrário, a missão"
+helpTXT = helpTXT + " passa com sucesso e a resistência ganha 1 ponto. Vence o grupo que marcar 3 pontos primeiro."
+helpTXT = helpTXT + "\n\nDetalhes \U000027a1 Os espiões conhecem todos os outros espiões. Os resistentes não possuem nenhuma informação"
+helpTXT = helpTXT + " inicial sobre os outros jogadores.\n\nAlguns papéis adicionais deixam o jogo mais emocionante. Digite /roles"
+helpTXT = helpTXT + " para visualizar os papéis disponíveis.\nhttps://pt.wikipedia.org/wiki/Resist%C3%AAncia_(jogo)"
+
+listTXT = "Estes são todos os comandos deste bot\n\nModo Privado:\n\n"
+listTXT = listTXT + "/help \U000027a1 Entenda como o jogo funciona\n"
+listTXT = listTXT + "/about \U000027a1 Veja mais informações sobre este bot e sobre o responsável por criar o código\n"
+listTXT = listTXT + "/roles \U000027a1 Entenda quais são os papéis disponíveis e quais são suas ações no jogo\n"
+listTXT = listTXT + "/start \U000027a1 Inicie o bot no chat privado\n"
+listTXT = listTXT + "/list \U000027a1 veja todos os comandos disponíveis\n"
+listTXT = listTXT + "\nModo Público (grupos ou supergrupos):\n\n"
+listTXT = listTXT + "/newgame \U000027a1 inicie um novo jogo\n"
+listTXT = listTXT + "/quitgame \U000027a1 feche o jogo atual\n"
+listTXT = listTXT + "/join \U000027a1 Entre no jogo aberto recentemente\n"
+listTXT = listTXT + "/leave \U000027a1 saia do jogo aberto recentemente\n"
+listTXT = listTXT + "/remember \U000027a1 reveja as configurações do jogo aberto\n"
+listTXT = listTXT + "/leader \U000027a1 veja a sequência dos líderes das missões\n"
+listTXT = listTXT + "/history \U000027a1 veja o histórico de votações do jogo atual\n"
+
+aboutTXT = "Olá, obrigado por usar meu bot !!\n\nCaso você encontre algum bug, deseja fazer críticas ou queira sugerir melhorias, entre em"
+aboutTXT = aboutTXT + " contato com meu canal direto no telegram: @kinhosz\n\nEste é um projeto open source, visite meu repositório em"
+aboutTXT = aboutTXT + " <p> link aqui </p>, siga e deixe seu gostei para me incentivar a realizar mais projetos deste tipo\U00002764"
+
+rolesTXT = "Papéis adicionais\n\n"
+rolesTXT = rolesTXT + "Merlin \U000027a1 É da resistência. Ao iniciar o jogo ele recebe informações adicionais sobre quem são os"
+rolesTXT = rolesTXT + " espiões. Cuidado: O Merlin não pode ser descoberto, pois, se a resistência ganhar, o assassino pode tentar"
+rolesTXT = rolesTXT + " matá-lo e reverter a vitória para os espiões. Ao ser adicionado, o assassino também será automaticamente."
+rolesTXT = rolesTXT + "\n\nDesbloqueado por: Nenhum jogador.\nDesbloqueia: Percy e Palm\n"
+rolesTXT = rolesTXT + "---------------------------------------------------------------\n"
+rolesTXT = rolesTXT + "Assassino \U000027a1 É espião. Ao final do jogo, se a resistência vencer, o assassino recebe a chance de tentar"
+rolesTXT = rolesTXT + " matar o Merlin. Se conseguir, vitória dos espiões, caso contrário, a vitória é da resistência\n"
+rolesTXT = rolesTXT + "---------------------------------------------------------------\n"
+rolesTXT = rolesTXT + "Percy \U000027a1 É da resistência. No início do jogo ele recebe a informação sobre quem é o Merlin, mas, se a"
+rolesTXT = rolesTXT + " Morgana for adicionada, ele recebe dois nomes: um para a Morgana e o outro para o Merlin. Mas ele precisa descobrir"
+rolesTXT = rolesTXT + " quem é quem.\n\nDesbloqueado por: Merlin\nDesbloqueia: Morgana\n"
+rolesTXT = rolesTXT + "---------------------------------------------------------------\n"
+rolesTXT = rolesTXT + "Palm \U000027a1 É da resistência. O jogador que recebe o Palm como um dos papéis nunca saberá até terminar o"
+rolesTXT = rolesTXT + " jogo. O Palm aparece como espião para o Merlin e para os outros espiões, mas joga como resistência\n"
+rolesTXT = rolesTXT + "\nDesbloqueado por: Merlin\nDesbloqueia: Ninguém\n"
+rolesTXT = rolesTXT + "---------------------------------------------------------------\n"
+rolesTXT = rolesTXT + "Morgana \U000027a1 É espiã. Ela pode tentar enganar o Percy e fingir ser o Merlin e ganhar alguma vantagem no jogo\n"
+rolesTXT = rolesTXT + "\nDesbloqueada por: Percy\nDesbloqueia: Ninguém\n"
+rolesTXT = rolesTXT + "---------------------------------------------------------------\n"
 ################## flip message ########################################################
 def receiveMessage():
 	global old_id
@@ -70,12 +120,24 @@ class botPlayer:
 		return ans
 
 	def approveMission(self):
-		return False
-		x = random.randint(0,1)
+		x = random.randint(0,2)
 		if x == 0:
 			return False
 		else:
 			return True
+
+	def sabotage(self):
+		if self.spy == False:
+			return False
+		x = random.randint(0,1)
+		if x == 0:
+			return True
+		else:
+			return False
+
+	def whoIsMerlin(self,L):
+		valor = random.randint(0,len(L) - 1)
+		return L[valor]
 
 ############################# config ###################################################
 class config:
@@ -113,6 +175,7 @@ class game:
 		self.denied = 0
 		self.waitingVote = []
 		self.currVote = ""
+		self.fails = 0
 
 	def setting(self,msg_id):
 		
@@ -158,6 +221,8 @@ class game:
 		if data == 'Palm':
 			self.messageSetting.text = self.messageSetting.text + "\n- Palm"
 			self.roles.append("Palm")
+		x = "ok"
+		return x
 
 	def addBots(self,Q):
 		for curr in range(1,Q+1):
@@ -224,7 +289,7 @@ class game:
 				if x.spy or ("Palm" in x.roles):
 					retorno = retorno + " - " + x.name
 			sendMessage(P.id,str(emoji)+"\n\nVocê é o MERLIN\n\n"+
-				"Os espiões são:\n\n" + str(retorno)+"\n\n" + str(emoji))
+				"Os espiões são:\n\n" + str(retorno)+"\n\n" + str(emoji),temp = 0.1)
 
 		elif "Morgana" in P.roles:
 			retorno = ""
@@ -234,7 +299,7 @@ class game:
 				if x.spy or ("Palm" in x.roles):
 					retorno = retorno + " - " + x.name
 			sendMessage(P.id,str(emoji)+"\n\nVocê é a MORGANA\n\n"+
-				"Os outros espiões são:\n\n"+str(retorno)+"\n\n"+str(emoji))
+				"Os outros espiões são:\n\n"+str(retorno)+"\n\n"+str(emoji),temp = 0.1)
 
 		elif "Percy" in P.roles:
 			retorno = ""
@@ -244,7 +309,7 @@ class game:
 				if ("Merlin" in x.roles) or ("Morgana" in x.roles):
 					retorno = retorno + " - " + x.name
 			sendMessage(P.id,str(emoji)+"\n\nVocê é o PERCY\n\n"+
-				"O Merlin é um desses jogadores:\n\n" + str(retorno)+"\n\n"+str(emoji))
+				"O Merlin é um desses jogadores:\n\n" + str(retorno)+"\n\n"+str(emoji),temp = 0.1)
 
 		elif "Assassin" in P.roles:
 			retorno = ""
@@ -254,7 +319,7 @@ class game:
 				if x.spy or ("Palm" in x.roles):
 					retorno = retorno + " - " + x.name
 			sendMessage(P.id,str(emoji)+"\n\nVocê é o ASSASSINO\n\n"+
-				"Os outros espiões são:\n\n"+ str(retorno)+"\n\n"+str(emoji))
+				"Os outros espiões são:\n\n"+ str(retorno)+"\n\n"+str(emoji),temp = 0.1)
 
 		elif P.spy:
 			retorno = ""
@@ -264,10 +329,10 @@ class game:
 				if x.spy or ("Palm" in x.roles):
 					retorno = retorno + " - " + x.name
 			sendMessage(P.id,str(emoji)+"\n\nVocê é um ESPIÃO\n\n"+
-				"Os outros espiões são:\n\n" + str(retorno)+"\n\n"+str(emoji))
+				"Os outros espiões são:\n\n" + str(retorno)+"\n\n"+str(emoji),temp = 0.1)
 		else:
 			sendMessage(P.id,str(emoji)+"\n\nVocê é da RESISTÊNCIA\n\n" + 
-				"Ajude seu time a vencer!\n\n"+str(emoji))
+				"Ajude seu time a vencer!\n\n"+str(emoji),temp = 0.1)
 
 	def sendAllInfo(self):
 		for P in self.players:
@@ -286,7 +351,7 @@ class game:
 			self.spies = 4
 
 		self.history = "\U000023EA    Histórico    \U000023EA\n\n"
-		self.history = self.history + "Rodada 1:\n\n"
+		self.history = self.history + "Missão 1:\n\n"
 		if self.totalPlayers == 5:
 			self.mission.append(2)
 			self.mission.append(3)
@@ -341,11 +406,11 @@ class game:
 			text = text + P + " "
 		text = text + "\n\nDigite /remember para rever esta mensagem\n\nDigite /leader para visualizar a ordem dos"
 		text = text + " próximos líderes das missões\n\n Digite /history para visualizar o histórico de votações"
-		sendMessage(to,text)
+		sendMessage(to,text,temp = 0.1)
 
 	def getHistory(self,to):
 		
-		sendMessage(to,self.history)
+		sendMessage(to,self.history,temp = 0.1)
 
 	def leader(self,to):
 		
@@ -362,7 +427,7 @@ class game:
 				text = text + " " + "\U0001F448"
 			text = text + "\n"
 			pi = pi + 1
-		sendMessage(to,text)
+		sendMessage(to,text,temp = 0.1)
 
 	def editVoteMessage(self):
 		
@@ -375,6 +440,7 @@ class game:
 				inline_keyboard = [
 				[InlineKeyboardButton(text = "Aprovar",callback_data = "accept"),
 				InlineKeyboardButton(text = "Recusar",callback_data = "denied")]]))
+		time.sleep(1)
 
 	def endOfGame(self,text):
 		
@@ -390,40 +456,136 @@ class game:
 		sendMessage(self.id,text)
 		Queue.append(self.id)
 
-	def pointForSpies(self):
+	def pointForSpies(self,text):
 		
 		self.Spoints = self.Spoints + 1
 		if self.Spoints == 3:
-			text = "\U0001F534   Vitória dos ESPIÕES   \U0001F534\n\n\n"
+			text = text + "\U0001F534   Vitória dos ESPIÕES   \U0001F534\n\n\n"
 			self.endOfGame(text)
 		else:
 			
-			sendMessage(self.id,"Ponto para os espiões\nEspiões: " + str(self.Spoints)+
+			sendMessage(self.id,text + "Ponto para os espiões\nEspiões: " + str(self.Spoints)+
 				"\nResistência: " + str(self.Rpoints))
 			self.consecutive = 3
 			self.state = self.state + 1
+			self.curr = self.curr + 1
+			if self.curr >= self.totalPlayers:
+				self.curr = 0
+			self.history = self.history + "\nMissão " + str(self.state) + ":\n\n"
 			self.chooseTheTeam()
 
-	def pointForResistance(self):
+	def checkMerlin(self,think):
+
+		ans = ""
+		for x in range(self.totalPlayers):
+			if "Merlin" in self.players[x].roles:
+				ans = self.players[x].name
+				break
+		if ans == think:
+			sendMessage(self.id,text = "O assassino matou "+think+
+				". " + think + " era o Merlin")
+			texto = "\U0001F534   Vitória dos ESPIÕES   \U0001F534\n\n\n"
+		else:
+			sendMessage(self.id,text = "O assassino matou "+think+
+				". " + think + " não era o Merlin")
+			texto = "\U0001F535   Vitória da RESISTÊNCIA   \U0001F535\n\n\n"
+		self.endOfGame(texto)
+
+	def killMerlin(self):
+		x = 0
+		L = []
+		botzin = False
+		lista = []
+		rob = None
+		while x < self.totalPlayers:
+			if "Assassin" in self.players[x].roles:
+				if self.players[x].isBot:
+					botzin = True
+					rob = self.players[x]
+				else:
+					Mid = self.players[x].id
+			else:
+				lista.append(self.players[x].name)
+				L.append([InlineKeyboardButton(text = self.players[x].name,
+					callback_data = str(self.id) + "$" + str(self.players[x].name))])
+			x = x + 1
+		bot.sendMessage(self.id,"\U000026D4   O assassino está tentando matar o Merlin...")
+		if botzin:
+			data = rob.whoIsMerlin(lista)
+			self.checkMerlin(data)
+		else:
+			r = bot.sendMessage(Mid,text = "Você é o assassino. Mate o Merlin!",callback_query = L)
+			self.privateMessage(r['message_id'])
+			self.action = "Merlin"
+
+	def pointForResistance(self,text):
 		
 		self.Rpoints = self.Rpoints + 1
+		sendMessage(self.id,text + "Ponto para a resistência\nEspiões: " + str(self.Spoints)+
+				"\nResistência: " + str(self.Rpoints))
 		if self.Rpoints == 3:
 			if "Merlin" in self.roles:
 				self.killMerlin()
 			else:
-				text = "\U0001F535   Vitória da RESISTÊNCIA   \U0001F535\n\n\n"
+				text = text + "\U0001F535   Vitória da RESISTÊNCIA   \U0001F535\n\n\n"
 				self.endOfGame(text)
-		else:
-			
-			sendMessage(self.id,"Ponto para a resistência\nEspiões: " + str(self.Spoints)+
-				"\nResistência: " + str(self.Rpoints))
+		else:		
 			self.consecutive = 3
 			self.state = self.state + 1
+			self.curr = self.curr + 1
+			if self.curr >= self.totalPlayers:
+				self.curr = 0
+			self.history = self.history + "\nMissão " + str(self.state) + ":\n\n"
 			self.chooseTheTeam()
+
+	def showResultMission(self):
+		if self.fails >= self.needToFail[self.state - 1]:
+			text = "\U0001F534    A missão foi SABOTADA    \U0001F534\n\n"
+			text = text + "Votos para falhar: " + str(self.fails) + "\n"
+			text = text + "----------------------------------------------\n\n"
+			self.history = self.history + text
+			self.pointForSpies(text)
+		else:
+			text = "\U0001F535    A missão foi um SUCESSO    \U0001F535\n\n"
+			text = text + "Votos para falhar: " + str(self.fails) + "\n"
+			text = text + "----------------------------------------------\n\n"
+			self.history = self.history + text
+			self.pointForResistance(text)
 
 	def gotoMission(self):
 		
-		sendMessage(self.id,"depois codo isso")
+		self.action = "Mission"
+		self.fails = 0
+		text = "\U00002709 O time foi enviado à missão...\n\nAguardando o resultado."
+		sendMessage(self.id,text)
+		x = 0
+		while x < self.totalPlayers:
+			if self.players[x].name not in self.currTeam:
+				x = x + 1
+				continue
+			if self.players[x].isBot:
+				if self.players[x].spy:
+					if self.players[x].sabotage():
+						self.fails = self.fails + 1
+			elif self.players[x].spy:
+				r = bot.sendMessage(self.players[x].id,text="O que você deseja fazer nesta missão?",
+					reply_markup = InlineKeyboardMarkup(
+						inline_keyboard = [
+							[InlineKeyboardButton(text = "Passar",callback_data = str(self.id) + "$pass"),
+							InlineKeyboardButton(text = "Sabotar",callback_data = str(self.id) + "$fail")]
+						]))
+				self.privateMessage.append(r['message_id'])
+			else:
+				r = bot.sendMessage(self.players[x].id,text = "O que você deseja fazer nesta missão?",
+					reply_markup = InlineKeyboardMarkup(
+						inline_keyboard = [
+							[InlineKeyboardButton(text = "Passar",callback_data = str(self.id) + "$pass")]
+						]))
+				self.privateMessage.append(r['message_id'])
+			self.currTeam.remove(self.players[x].name)
+			x = x + 1
+		if len(self.privateMessage) == 0:
+			self.showResultMission()
 
 	def showResultTeam(self):
 		
@@ -443,8 +605,8 @@ class game:
 			self.curr = self.curr + 1
 			if self.curr >= self.totalPlayers:
 				self.curr = 0
-			sendMessage(self.id,"\U0001F6A8 Limite de rejeições atingido \U0001F6A8")
-			self.pointForSpies()
+			text = "\U0001F6A8 Limite de rejeições atingido \U0001F6A8\n\n"
+			self.pointForSpies(text)
 		else:
 			self.curr = self.curr + 1
 			self.consecutive = self.consecutive - 1
@@ -453,6 +615,8 @@ class game:
 			self.chooseTheTeam()
 
 	def voteReceived(self,who,vote):
+		if who not in self.waitingVote:
+			return None
 		self.waitingVote.remove(who)
 		if vote == "accept":
 			self.approve = self.approve + 1
@@ -500,7 +664,7 @@ class game:
 		while tam > 0:
 			self.privateMessage.pop()
 			tam = tam-1
-		r = sendMessage(self.id,text = "Aguardando os votos de ")
+		r = sendMessage(self.id,text = "votação abrirá em segundos...")
 		self.privateMessage.append(r['message_id'])
 		self.editVoteMessage()
 
@@ -537,6 +701,7 @@ class game:
 		bot.editMessageText(msg_identifier = (self.players[self.curr].id,self.privateMessage[0]),
 							text = text,reply_markup = InlineKeyboardMarkup(
 								inline_keyboard = L))
+		time.sleep(1)
 
 	def chooseTheTeam(self):
 		
@@ -548,7 +713,7 @@ class game:
 			text = text + "@" + str(self.players[self.curr].name)
 		text = text + ", Você é o líder da missão. Escolha " + str(self.mission[self.state-1])
 		text = text + " jogadores para formar seu time. Lembre-se, "
-		if self.needToFail[self.state] == 1:
+		if self.needToFail[self.state - 1] == 1:
 			text = text + "é necessária apenas uma falha para a missão ser sabotada, caso o time seja aprovado"
 		else:
 			text = text + "são necessárias " + str(self.needToFail(self.state-1)) + " falhas para a missão ser sabotada,"
@@ -568,7 +733,18 @@ class game:
 			self.action = "choose"
 			self.msgLeader()
 
+	def failMission(self,data,mid,cid):
+		if data == "pass":
+			bot.editMessageText(msg_identifier = (cid,mid),text = "Você decidiu passar a missão.",reply_markup = None)
+		else:
+			self.fails = self.fails + 1
+			bot.editMessageText(msg_identifier = (cid,mid),text = "Você decidiu sabotar a missão.",reply_markup = None)
+		if len(self.privateMessage) == 0:
+			self.showResultMission()
+
 	def updateTeam(self,p):
+		if p not in self.candidates:
+			return None
 		self.remain = self.remain - 1
 		self.candidates.remove(p)
 		self.currTeam.append(p)
@@ -576,7 +752,6 @@ class game:
 		if self.remain == 0:
 			self.privateMessage.pop()
 			self.isTeamOk()
-
 
 	def initGame(self):
 		
@@ -673,9 +848,9 @@ def getNames(L):
 		LL.append(x.name)
 	return LL
 ###################### send Message ####################################################
-def sendMessage(to,text,reply_markup = None):
+def sendMessage(to,text,reply_markup = None,temp = 3):
 	r = bot.sendMessage(to,text = text,reply_markup = reply_markup)
-	time.sleep(3)
+	time.sleep(temp)
 	return r
 
 ####### some global variables ##########################################################
@@ -687,15 +862,17 @@ Queue = []
 def privateMode(msg):
 	
 	if '/start' == msg['message']['text']:
-		sendMessage(msg['message']['from']['id'],welcomeTXT)
+		bot.sendMessage(msg['message']['from']['id'],welcomeTXT)
 	if '/newgame' == msg['message']['text']:
-		sendMessage(msg['message']['from']['id'],"Este comando só funciona em grupos ou supergrupos \U0000274C")
+		bot.sendMessage(msg['message']['from']['id'],"Este comando só funciona em grupos ou supergrupos \U0000274C")
 	if '/help' == msg['message']['text']:
-		sendMessage(msg['message']['from']['id'],helpTXT)
+		bot.sendMessage(msg['message']['from']['id'],helpTXT)
 	if '/about' == msg['message']['text']:
-		sendMessage(msg['message']['from']['id'],aboutTXT)
+		bot.sendMessage(msg['message']['from']['id'],aboutTXT)
 	if '/list' == msg['message']['text']:
-		sendMessage(msg['message']['from']['id'],listTXT)
+		bot.sendMessage(msg['message']['from']['id'],listTXT)
+	if '/roles' == msg['message']['text']:
+		bot.sendMessage(msg['message']['from']['id'],rolesTXT)
 
 ############################## group mode #############################################
 def groupMode(msg):
@@ -778,6 +955,7 @@ def groupMode(msg):
 				bot.editMessageText(msg_identifier = avalon.games[x].getSettingIdentifier(),
 						text = avalon.games[x].getSettingText(),
 						reply_markup = avalon.games[x].getSettingReply())
+				time.sleep(1)
 		else:
 			sendMessage(msg['message']['chat']['id'],
 				'@'+msg['message']['from']['username'] + ' você não estava no jogo \U0001F609')
@@ -807,9 +985,6 @@ while 1:
 		if 'private' == msg['callback_query']['message']['chat']['type']:
 			data = str(msg['callback_query']['data']).split("$")
 			x = avalon.findGame(str(data[0]))
-			print('idg -> ',avalon.games[0].id)
-			print('chat -> ', data[0])
-			print('x -> ',x)
 			if x == -1:
 				continue
 			if avalon.games[x].state == 0:
@@ -817,16 +992,27 @@ while 1:
 			if msg['callback_query']['message']['message_id'] in avalon.games[x].privateMessage:
 				if avalon.games[x].action == "choose":
 					avalon.games[x].updateTeam(str(data[1]))
-
+				elif avalon.games[x].action == "Mission":
+					avalon.games[x].privateMessage.remove(msg['callback_query']['message']['message_id'])
+					avalon.games[x].failMission(data = data[1],mid = msg['callback_query']['message']['message_id'],
+						cid = msg['callback_query']['message']['chat']['id'])
+				elif avalon.games[x].action == "Merlin":
+					bot.editMessageText(msg_identifier = (msg['callback_query']['message']['chat']['id'],
+						msg['callback_query']['message']['message_id']),text= "Você escolheu matar " + str(data[1]),reply_markup = None)
+					avalon.games[x].privateMessage.remove(msg['callback_query']['message']['message_id'])
+					avalon.games[x].checkMerlin(data[1])
 		else:
 			x = avalon.findGame(msg['callback_query']['message']['chat']['id'])
 			if x != -1:
 				if avalon.games[x].state == 0 and msg['callback_query']['message']['message_id'] == avalon.games[x].messageSetting.msgId:
 					if msg['callback_query']['from']['username'] == avalon.games[x].owner:
-						avalon.games[x].settingUpdate(msg['callback_query']['data'])
+						r = avalon.games[x].settingUpdate(msg['callback_query']['data'])
+						if r == None:
+							continue
 						bot.editMessageText(msg_identifier = avalon.games[x].getSettingIdentifier(),
 							text = avalon.games[x].getSettingText(),
 							reply_markup = avalon.games[x].getSettingReply())
+						time.sleep(1)
 				elif avalon.games[x].state != 0 and avalon.games[x].action == "voteTeam":
 					if msg['callback_query']['from']['username'] in avalon.games[x].waitingVote:
 						avalon.games[x].voteReceived(msg['callback_query']['from']['username'],msg['callback_query']['data'])
