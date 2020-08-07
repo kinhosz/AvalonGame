@@ -176,6 +176,7 @@ class game:
 		self.waitingVote = []
 		self.currVote = ""
 		self.fails = 0
+		self.comandRemain = 0
 
 	def setting(self,msg_id):
 		
@@ -339,7 +340,11 @@ class game:
 			self.sendInfo(P)
 
 	def printAllInfo(self):
+		self.comandRemain = 0
 		for P in self.players:
+			if P.isBot == False:
+				self.comandRemain = self.comandRemain + 1
+				Fila.append((P.name,self.id))
 			print(P.name,': ',P.roles)
 
 	def setVariables(self):
@@ -514,8 +519,9 @@ class game:
 			data = rob.whoIsMerlin(lista)
 			self.checkMerlin(data)
 		else:
-			r = bot.sendMessage(Mid,text = "Você é o assassino. Mate o Merlin!",callback_query = L)
-			self.privateMessage(r['message_id'])
+			r = bot.sendMessage(Mid,text = "Você é o assassino. Mate o Merlin!",reply_markup = InlineKeyboardMarkup(
+				inline_keyboard = L))
+			self.privateMessage.append(r['message_id'])
 			self.action = "Merlin"
 
 	def pointForResistance(self,text):
@@ -763,11 +769,14 @@ class game:
 		self.shuffle()
 		self.setRoles()
 		self.shuffle()
-		self.sendAllInfo()
 		self.printAllInfo()
-		sendMessage(self.id,"\U0001F534\U0001F535 Por favor, chequem seus papéis que foram"+
-			" enviados no privado \U0001F534\U0001F535")
+		sendMessage(self.id,"\U0001F534\U0001F535 Por favor, cliquem no botão abaixo e enviem o comando /view para"+
+			" visualizar seu papel no jogo. \U0001F534\U0001F535\n\nAguardando os comandos...",reply_markup = InlineKeyboardMarkup(
+				inline_keyboard = [[InlineKeyboardButton(text = "Envie-me o comando",url = "t.me/avalon_kinhobot")]]))
 		self.shuffle()
+
+	def initGame2(self):
+		self.sendAllInfo()
 		self.remember(self.id)
 		self.chooseTheTeam()
 
@@ -847,8 +856,24 @@ def getNames(L):
 	for x in L:
 		LL.append(x.name)
 	return LL
+####################### remove #########################################################
+def remove(txt):
+	sz = len(Fila)
+	idx = []
+	for i in range(sz):
+		if txt == Fila[i][0]:
+			idx.append(Fila[i])
+			x = avalon.findGame(Fila[i][1])
+			avalon.games[x].comandRemain = avalon.games[x].comandRemain - 1
+			if avalon.games[x].comandRemain == 0:
+				avalon.games[x].initGame2()
+	sz = len(idx)
+	for i in range(sz):
+		Fila.remove(idx[i])
+
 ###################### send Message ####################################################
 def sendMessage(to,text,reply_markup = None,temp = 3):
+	print('id -> ',to) #id user = 686267431
 	r = bot.sendMessage(to,text = text,reply_markup = reply_markup)
 	time.sleep(temp)
 	return r
@@ -857,6 +882,7 @@ def sendMessage(to,text,reply_markup = None,temp = 3):
 sentMessage = None
 avalon = general()
 Queue = []
+Fila = []
 
 ############################### private mode ##########################################
 def privateMode(msg):
@@ -873,6 +899,8 @@ def privateMode(msg):
 		bot.sendMessage(msg['message']['from']['id'],listTXT)
 	if '/roles' == msg['message']['text']:
 		bot.sendMessage(msg['message']['from']['id'],rolesTXT)
+	if '/view' == msg['message']['text']:
+		remove(msg['message']['from']['username'])
 
 ############################## group mode #############################################
 def groupMode(msg):
