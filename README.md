@@ -1,3 +1,3 @@
 # AvalonGame
-Telegram Bot para jogar o Avalon
-@kinho_avalonbot
+Telegram Bot para jogar o Avalon<br>
+@Avalon_kinhobot
